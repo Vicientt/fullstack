@@ -1,0 +1,34 @@
+POST http://localhost:3001/api/persons
+Content-Type: application/json
+
+{
+    "name": "Trang Nguyen",
+    "number": "740-358-6868"
+}
+
+###
+POST http://localhost:3001/api/persons/
+Content-Type: application/json
+
+{
+    "name": "Hello Universe"
+}
+
+###
+POST http://localhost:3001/api/persons/
+Content-Type: application/json
+
+{
+    "name": "Trang Nguyen",
+    "number": "740-358-6868"
+}
+
+###
+POST http://localhost:3001/api/persons/
+Content-Type: application/json
+
+{
+    "name": "Nhi Nguyen",
+    "number": "740-358-6868"
+}
+
