@@ -50,7 +50,7 @@ app.delete('/api/notes/:id', (request, response) => {
 // POST function
 
 const generateId = () => {
-    const maxId = Math.max(...notes.map(note => note.id))
+    const maxId = Math.max(...notes.map(note => Number(note.id)))
     return String(maxId + 1)
 }
 
@@ -81,7 +81,7 @@ app.put('/api/notes/:id', (request,response) => {
     const id = request.params.id
     const body = request.body //JSON
 
-    const note = notes.fund(n => n.id === id)
+    const note = notes.find(n => n.id === id)
     if(!note){
         return response.status(404).json({error: 'note not found'})
     }
