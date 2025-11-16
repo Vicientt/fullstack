@@ -106,6 +106,24 @@ app.post('/api/persons',(request,response) => {
     }
 })
 
+// PUT FUNCTION
+app.put(`api/persons/:id`,(request, response) => {
+    const id = request.params.id
+    const person = request.body
+
+    const note = persons.find(n => n.id === id)
+    if(!note){
+        return response.status(404).json({error: 'note not found'})
+    }
+
+    const updateNoted = {
+        ...note,
+        "number": String(person.number)
+    }
+    persons = persons.map(n => n.id === id ? updateNoted : n)
+    response.json(updateNoted)
+})
+
 app.use(express.static('dist'))
 // --------------------------
 const PORT = process.env.PORT || 3001
