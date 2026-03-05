@@ -1,3 +1,4 @@
+// Show country, area, capital, languages
 const DisplayCountry = ({country, area, capital, languages, src}) => {
     return(
     <div>

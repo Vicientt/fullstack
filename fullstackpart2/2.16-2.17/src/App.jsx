@@ -19,7 +19,7 @@ const App = () => {
   useEffect(() => {
     console.log('start craw 1st time')
     axios
-      .get("http://localhost:3001/persons")
+      .get("api/persons")
       .then(response => {
          setPersons(response.data)})
       }, [])
@@ -60,7 +60,7 @@ const App = () => {
     if(window.confirm(`Delete ${name} ?`)){
     axios
       // delete information
-      .delete(`http://localhost:3001/persons/${id}`)
+      .delete(`api/persons/${id}`)
       .then(() => {
         setPersons(prev => prev.filter(note => note.id !== id))
       })
@@ -93,7 +93,7 @@ const App = () => {
       const updateNumber = {...personExists, number: newNumber}
       axios
       // change information
-        .put(`http://localhost:3001/persons/${personExists.id}`,updateNumber)
+        .put(`api/persons/${personExists.id}`,updateNumber)
         .then(response => {
           setPersons(persons.map(person => person.id === personExists.id ? response.data : person))
           setSuccessMessage(`Updated phone number for ${personExists.name}`) // Success user message updated
@@ -116,7 +116,7 @@ const App = () => {
     const newPerson = {name: newName, number: newNumber}
     axios
       // add information
-      .post("http://localhost:3001/persons", newPerson)
+      .post("api/persons", newPerson)
       .then(response => {
           setPersons(prev => prev.concat(response.data))
           setNewName('')

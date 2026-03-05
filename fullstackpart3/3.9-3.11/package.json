@@ -1,0 +1,9 @@
+{
+  "name": "phonebook-3.9-3.11",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build:deploy": "cd frontend && npm install && npm run build && cp -r dist ../backend/",
+    "start:deploy": "cd backend && npm install && node index.js"
+  }
+}

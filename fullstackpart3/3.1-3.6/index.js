@@ -1,49 +1,43 @@
 require('dotenv').config()
 
 const express = require('express')
+const morgan = require("morgan")
+
 const app = express()
-const morgan = require('morgan')
-
-Person = require('./models/person')
-
-const cors = require('cors')
-app.use(cors())
 app.use(express.json())
-app.use(express.static('dist'))
-app.use(morgan('tiny'))
-// let persons = [
-//     { 
-//       "id": "1",
-//       "name": "Arto Hellas", 
-//       "number": "040-123456"
-//     },
-//     { 
-//       "id": "2",
-//       "name": "Ada Lovelace", 
-//       "number": "39-44-5323523"
-//     },
-//     { 
-//       "id": "3",
-//       "name": "Dan Abramov", 
-//       "number": "12-43-234345"
-//     },
-//     { 
-//       "id": "4",
-//       "name": "Mary Poppendieck", 
-//       "number": "39-23-6423122"
-//     }
-// ]
+app.use(morgan("tiny"))
+
+let persons = [
+    { 
+      "id": "1",
+      "name": "Arto Hellas", 
+      "number": "040-123456"
+    },
+    { 
+      "id": "2",
+      "name": "Ada Lovelace", 
+      "number": "39-44-5323523"
+    },
+    { 
+      "id": "3",
+      "name": "Dan Abramov", 
+      "number": "12-43-234345"
+    },
+    { 
+      "id": "4",
+      "name": "Mary Poppendieck", 
+      "number": "39-23-6423122"
+    }
+]
 
 // GET 3.1
-app.get('/api/persons',(request,response) => {
-    Person.find({}).then(result => {
-        response.json(result)
-    })
+app.get(`/api/persons`, (req, res) => {
+    res.json(persons)
 })
 
-// GET 3.2 
-app.get('/info', async (request,response) => {
-    const count = await Person.countDocuments({})
+// Get 3.2 - info
+app.get('/info', (req,res) => {
+    const count = persons.length
 
     const timeNY = new Date().toLocaleString("en-US", {
     timeZone: "America/New_York",
@@ -57,70 +51,67 @@ app.get('/info', async (request,response) => {
     timeZoneName: "long"
   })
     
-    response.send(`
+    res.end(`
         <p>Phone book has info for ${count} people</p>
         <p>${timeNY}</p>`)
 })
 
-// GET 3.3
-app.get('/api/persons/:id',(request,response) => {
-    Person.findById(request.params.id).then(person => {
-        if (person) response.json(person)
-        else response.status(404).end()
-    })
-})
+// Get 3.3 - Each id
+app.get('/api/persons/:id', (req,res) => {
+    const id = req.params.id
+    exist_id = persons.some(person => person.id === id)
 
-// DELETE 3.4
-app.delete('/api/persons/:id',(request,response) => {
-    const id = request.params.id
-    Person.findByIdAndDelete(id).then(
-        () => response.status(204).end()
-    )
-})
-
-// ADD 3.5 + 3.6
-// const generateID = () => {
-//     const ids = Math.max(...persons.map(n => Number(n.id)))
-//     return persons.length > 0 ? ids : 1
-// }
-
-app.post('/api/persons',(request,response) => {
-    const person = request.body
-    console.log(person)
-
-    if(!person.name || !person.number){
-        return response.status(400).json({error: 'please add name/number'})
-    }
-    else{
-        const newPerson = new Person ({
-            "name": person.name,
-            "number": person.number
+    if(!exist_id){
+        return res.status(404).json({
+            error: 'this id does not exist'
         })
-
-    newPerson.save().then(result => {
-        response.json(result)
-    })
     }
+
+    person = persons.find(p => p.id === id)
+    res.json(person)
 })
 
-// PUT FUNCTION
-app.put(`/api/persons/:id`,(request, response) => {
-    const id = request.params.id
-    const person = request.body
+// Delete 3.4
+app.delete('/api/persons/:id', (req,res) => {
+    const id = req.params.id
+    exist_id = persons.some(person => person.id === id)
 
-    const updateNoted = {
-        ...person,
-        "number": String(person.number)
+    if(!exist_id){
+        return res.status(404).json({
+            error: 'this id does not exist'
+        })
     }
-    
-    Person.findByIdAndUpdate(id,updateNoted,{new: true}).then(result => {
-        response.json(result)
-    })
-    .catch(error => response.status(400).json({error: 'malformatted id'}))
+
+    persons = persons.filter(p => p.id !== id)
+    res.status(204).end(`Delete ${id} successfully!`)
 })
 
-// --------------------------
-const PORT = process.env.PORT
+// Post 3.5
+app.post(`/api/persons`,(req,res) => {
+    const max_id = persons.length > 0 ? Math.max(...persons.map(persons => Number(persons.id))) : 0
+    const body = req.body
+
+    name_exist = persons.some(person => person.name === body.name)
+    if(name_exist){
+        return res.status(400).json({
+            error: 'The name already exists'
+        })
+    }
+    if(!body.number || !body.name){
+        return res.status(400).json({
+            error: 'Does not have enough information'
+        })
+    }
+
+    new_person = {
+        id: String(max_id + 1),
+        ...body
+    }
+
+    persons = [...persons,new_person]
+    res.json(new_person)
+})
+const PORT = 3001
 app.listen(PORT, () =>{
     console.log(`Server running on port ${PORT}`)
 })

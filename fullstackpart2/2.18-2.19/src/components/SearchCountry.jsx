@@ -1,6 +1,6 @@
 const SearchCountry = ({onChange, value}) => {
-    return(
-        <input value = {value} onChange = {onChange}/>
+    return (
+        <input onChange = {onChange} value = {value} />
     )
 }
 

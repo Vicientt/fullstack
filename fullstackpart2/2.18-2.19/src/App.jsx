@@ -6,69 +6,94 @@ import axios from 'axios'
 import SearchCountry from './components/SearchCountry'
 import DisplayCountry from './components/DisplayCountry'
 
-function App() {
-  const [allCountries, setAllCountries] = useState([])
-  const [searchCountry, setSearchCountry] = useState('')
-  const [chooseCountry, setchooseCountry] = useState('')
-  const [showMode, setShowMode] = useState(false)
+const App = () => {
+    const [search, useSearch] = useState('')
+    const [showsearchresult, useShowsearchresult] = useState(false)
+    const [showfinalresult, useShowfinalresult] = useState(false)
+    const [allcountries, useAllcountries] = useState([])
+    const [finalcountry, useFinalcountry] = useState('')
 
-  // Crawl data from Json first
-  useEffect(() => {
-     axios
-      .get(`https://studies.cs.helsinki.fi/restcountries/api/all`)
-      .then(response => {
-        setAllCountries(response.data)
-      })
-  },[])
+    // First time extract all value from the API page
+    useEffect(() => {
+      axios
+        .get(`https://studies.cs.helsinki.fi/restcountries/api/all`)
+        .then(response => {
+          useAllcountries(response.data)
+          //console.log(response.data)
+    })  
+        .catch(error => console.log(error.message))
+    },[])
+    // When typing or not click on Show just save it as false
+    useEffect(() => {
+        useShowsearchresult(false)
+    }
+    ,[search])
 
-  // Search => Info dissapear
-  useEffect(() => {
-    setShowMode(false)
-    setchooseCountry('')
-  },[searchCountry])
-  
-  // Handle when typing search country
-  const handleSearch = (event) => {
-    setSearchCountry(event.target.value)
-  }
-  
-  const filtered = allCountries.filter(c => c.name.common.toLowerCase().includes(searchCountry.toLowerCase()))
-  
-  const handleClick = (country) => {
-      setchooseCountry(country)
-      setShowMode(true)
-  }
 
-  const filtered_choose = allCountries.filter(c => c.name.common === chooseCountry)
 
-  return (
-    <div>
-      <div>
-        Find Countries <SearchCountry onChange = {handleSearch} value={searchCountry} />
-      </div>
 
-      {showMode && filtered_choose.length > 0 && (
-        <DisplayCountry country={filtered_choose[0].name.common} area ={filtered_choose[0].area} capital={filtered_choose[0].capital[0]} languages={filtered_choose[0].languages} src = {filtered_choose[0].flags.png}/>
-      )}
+    // Display the value when searching
+    const handleSearchCountry = (event) => {
+        useSearch(event.target.value)
+        useShowsearchresult(false)
+        useShowfinalresult(false)
+    }
+    
+    // Handle display search result 
+    const handleshowResult = () => {
+        useShowsearchresult(true)
+    }
+    
+    const handleshow1Country = (country) => {
+        useShowfinalresult(true)
+        useFinalcountry(country)
+        useShowsearchresult(false)
+    }
 
-      {!showMode && searchCountry !== '' && (
-        <>
-          {filtered.length > 10 ? (
-            <h2>Too many matches, specify another filter</h2>
-          ) : filtered.length === 1 ? (
-            <DisplayCountry country={filtered[0].name.common} area ={filtered[0].area} capital={filtered[0].capital[0]} languages={filtered[0].languages} src = {filtered[0].flags.png}/>
-          ) : (
-            filtered.map(country => (
-            <div key = {country.ccn3}>
-               {country.name.common}
-               <button onClick = {() => handleClick(country.name.common)}>Show</button>
+
+
+    const show_possible_result = allcountries.filter(data => data.name.common.toLowerCase().includes(search.toLowerCase()))
+    const filtered1 = allcountries.filter(data => data.name.common === finalcountry)
+
+
+
+
+    return(
+    <>
+      <>
+        <SearchCountry onChange = {handleSearchCountry} value = {search}> </SearchCountry>
+        <button onClick = {handleshowResult}>Show</button>
+      </>
+
+      <>
+      {
+        showsearchresult && (
+          show_possible_result.length > 10 ? <h2>Please enter more letter</h2> :
+          show_possible_result.length === 0 ? <h2>No result found</h2> :
+          show_possible_result.map(data =>(
+            <div key = {data.ccn3}>
+                <li key = {data.ccn3}>{data.name.common}</li> 
+                <button onClick = {() => handleshow1Country(data.name.common)}>Show</button>
             </div>
-          ))
-          )}
-        </>
-      )}
-    </div>
-  )
-}
+          )
+          )
+        )
+      }
+      </>
 
+      <>
+      {
+        showfinalresult &&
+          <DisplayCountry
+            country = {filtered1[0].name.common}
+            area = {filtered1[0].area}
+            capital = {filtered1[0].capital[0]}
+            languages = {filtered1[0].languages}
+            src = {filtered1[0].flags.png}>
+          </DisplayCountry>
+      }
+      </>
+    </>
+    )
+  }
 export default App

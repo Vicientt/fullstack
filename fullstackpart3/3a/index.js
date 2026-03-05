@@ -1,9 +1,8 @@
 const express = require('express')
 const app = express()
-const cors = require('cors')
-app.use(cors())
+// For use request.body case
+app.use(express.json())
 
-app.use(express.static('dist'))
 let notes = [
   {
     id: "1",
@@ -21,82 +20,79 @@ let notes = [
     important: true
   }
 ]
-
-app.get('/',(request,response) => {
-    response.send('<h1>Hello World</h1>')
+app.get(`/api/notes/`, (req,res) => {
+    notes ? (
+      res.json(notes)
+    ) : (
+      res.status(404).end()
+    )
 })
-
-app.get('/api/notes/', (request,response) => {
-    response.json(notes)
-})
-
-app.get('/api/notes/:id', (request,response) => {
-    const id = request.params.id
+app.get(`/api/notes/:id`, (req,res) => {
+    const id = req.params.id
     const note = notes.find(note => note.id === id)
-    if(note){
-    response.json(note)
-    }
-    else{
-        response.status(404).end()
-    }
+    note ? (
+        res.json(note)
+    ) : (
+        res.status(404).end(`Do not find the id of ${id}`)
+    )
 })
 
-app.delete('/api/notes/:id', (request, response) => {
-    const id = request.params.id
-    notes = notes.filter(note => note.id !== id)
-    response.status(204).end()
+app.delete(`/api/notes/:id`, (req,res) => {
+  const id = req.params.id
+  notes = notes.filter(note => note.id !== id)
+  res.status(204).end()
 })
 
-// POST function
-
-const generateId = () => {
-    const maxId = Math.max(...notes.map(note => Number(note.id)))
-    return String(maxId + 1)
-}
-
-app.use(express.json())
-app.post('/api/notes', (request,response) => {
-    const note = request.body
-
-    if (!note.content) {
-        return response.status(400).json({
-            error: 'content missing'
-        })
+app.post(`/api/notes`, (req,res) => {
+    const note = req.body
+    if(!note.content){
+      res.status(400).json({
+        error: `content missing`
+      })
+      return 
     }
 
-    const newNote = {
-        "id": generateId(),
-        "content": note.content,
-        "important": note.important || false
+    note_exist = notes.some(n => n.content === note.content)
+    if(note_exist) {
+      return res.status(400).json({
+        error: `this content already exists`
+      })
     }
 
-    notes = notes.concat(newNote)
-    console.log(newNote)
-    console.log(notes)
-    response.json(newNote)
-})
+    const maxId = notes.length > 0 ? Math.max(...notes.map(n => Number(n.id))) : 0
 
-// PUT function
-app.put('/api/notes/:id', (request,response) => {
-    const id = request.params.id
-    const body = request.body //JSON
-
-    const note = notes.find(n => n.id === id)
-    if(!note){
-        return response.status(404).json({error: 'note not found'})
-    }
-
-    const updatedNote = {
-        ...note,
-        content: body.content,
-        important: body.important
-    }
+    note.id = String(maxId + 1)
     
-    notes = notes.map(n => n.id === id ? updatedNote : n)
-    
-    response.json(updatedNote)
+    const new_note = {
+      id: note.id,
+      content: note.content,
+      important: note.important
+    }
+    notes = [...notes, new_note]
+    res.json(new_note)
 })
 
-const PORT = process.env.PORT || 3001
+app.put(`/api/notes/:id`,(req,res) =>{
+   const id = req.params.id
+   const body = req.body
+
+   id_exist = notes.some(n => n.id === id)
+   if(!id_exist) {
+    res.status(400).json(
+      {error: "The data does not exist in the server"}
+    )
+    return
+   }
+  
+  new_note = {
+    id: id,
+    ...body
+  }
+  notes = notes.map(n => n.id === id ? new_note : n)
+
+  res.json(new_note)
+})
+const PORT = 3001
 app.listen(PORT, () => {
-console.log(`Server running on port ${PORT}`)})
+    console.log(`Server running on port ${PORT}`)
+})
